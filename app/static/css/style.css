@@ -1,0 +1,19 @@
+.container {
+    width: 700px;
+    padding-top: 5%;
+}
+
+.signup-success {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.completely-success {
+    floating: left;
+    padding-bottom: 20px;
+}
+
+.clickable-row {
+    cursor: pointer;
+}

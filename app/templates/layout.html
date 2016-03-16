@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{title}}</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}"/>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap-theme.min.css')}}"/>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}"/>
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <h1><span class="glyphicon glyphicon-envelope"></span> Post</h1>
+    </div>
+    {% block menu %} {% endblock %}
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="alert alert-{{category}}" role="alert">{{message}}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+</div>
+<script src="{{url_for('static', filename='js/jquery-2.2.1.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/script.js')}}"></script>
+</body>
+</html>

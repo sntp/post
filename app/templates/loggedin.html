@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block menu %}
+{% if current_user.is_authenticated %}
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="collapse navbar-collapse">
+            <ul id="menu" class="nav navbar-nav">
+                <li><a href="{{url_for('inbox')}}">Inbox {% if new_mails %} <span class="badge">{{new_mails}}</span> {% endif %}</a></li>
+                <li><a href="{{url_for('send_get')}}">Send</a></li>
+                <li><a href="{{url_for('draft')}}">Draft{% if draft_mails %} <span class="badge">{{draft_mails}}</span> {% endif %}</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="{{url_for('logout')}}">Log out ({{current_user.username}})</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endif %}
+{% endblock %}

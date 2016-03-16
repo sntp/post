@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="signup-success">
+    <h1>CONGRATULATIONS!</h1>
+    <h2>You have successfully signed up</h2>
+    <div class="completely-success">
+        <img height="100" src="{{url_for('static', filename='image/success2.gif')}}" />
+        <img height="100" src="{{url_for('static', filename='image/success3.gif')}}" />
+        <img height="100" src="{{url_for('static', filename='image/success4.gif')}}" />
+    </div>
+    <p class="lead">
+        Now you may <a href="{{url_for('login_get')}}">log in</a>
+    </p>
+</div>
+{% endblock %}
