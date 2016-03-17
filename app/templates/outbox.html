@@ -7,8 +7,8 @@
 <div class="panel panel-default">
   <table class="table table-hover">
       {% for mail in mails %}
-      <tr class="clickable-row {% if not mail.viewed %} bg-info {% endif %}" data-href="{{url_for('mail', id=mail.id)}}">
-          <td>{{mail.sender.username}}</td>
+      <tr class="clickable-row {% if not mail.viewed %} bg-info {% endif %}" data-href="{{url_for('mail_outbox', id=mail.id)}}">
+          <td>{{mail.recipient.username}}</td>
           <td>{{mail.title}}</td>
           <td>{{mail.text[:35] + ('...' if (mail.text.__len__() > 35) else ' ')}}</td>
           <td class="text-right">{{mail.timestamp.strftime('%d. %b %y %I:%M %p')}}</td>

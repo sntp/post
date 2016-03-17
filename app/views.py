@@ -192,7 +192,23 @@ def mail(id):
     else:
         Mail.query.filter_by(id=mail.id).update({'viewed': True})
         db.session.commit()
-    return render_template('mail.html',
+    return render_template('incoming-mail.html',
+                           title='Mail',
+                           new_mails=_new_mails_count(),
+                           draft_mails=_draft_count(),
+                           mail=mail)
+
+
+@app.route('/mail/out/<int:id>')
+@login_required
+def mail_outbox(id):
+    mail = Mail.query.filter_by(id=id, sender_id=current_user.get_id()).first()
+    if not mail:
+        flash('Mail doesn\'t exist.', 'danger')
+    else:
+        Mail.query.filter_by(id=mail.id).update({'viewed': True})
+        db.session.commit()
+    return render_template('outcoming-mail.html',
                            title='Mail',
                            new_mails=_new_mails_count(),
                            draft_mails=_draft_count(),
@@ -212,6 +228,25 @@ def draft(page=1):
     pagination = Pagination(page=page, per_page=config.MAIL_PER_PAGE, total=total, bs_version=3)
     return render_template('draft.html',
                            title='Draft',
+                           pagination=pagination,
+                           new_mails=_new_mails_count(),
+                           draft_mails=_draft_count(),
+                           mails=mails)
+
+
+@app.route('/outbox')
+@app.route('/outbox/<int:page>')
+@login_required
+def outbox(page=1):
+    total = Mail.query.filter_by(sender_id=current_user.get_id(), status='sent').count()
+    mails = Mail.query \
+        .filter_by(sender_id=current_user.get_id(), status='sent') \
+        .order_by('timestamp DESC') \
+        .paginate(page, config.MAIL_PER_PAGE) \
+        .items
+    pagination = Pagination(page=page, per_page=config.MAIL_PER_PAGE, total=total, bs_version=3)
+    return render_template('outbox.html',
+                           title='Outbox',
                            pagination=pagination,
                            new_mails=_new_mails_count(),
                            draft_mails=_draft_count(),

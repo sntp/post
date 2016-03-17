@@ -1,4 +1,4 @@
-{% extends "loggedin.html" %}
+{% extends "authorized.html" %}
 {% block content %}
 {% if mail %}
 <h2>{{mail.title}}</h2>
@@ -9,7 +9,7 @@
     </p>
     {% endfor %}
     <p class="text-right">
-        from {{mail.recipient.username}}, {{mail.timestamp.strftime('%d. %b %y %I:%M %p')}}
+        from {{mail.sender.username}}, {{mail.timestamp.strftime('%d. %b %y %I:%M %p')}}
     </p>
 </div>
 {% endif %}

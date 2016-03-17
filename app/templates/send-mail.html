@@ -1,4 +1,4 @@
-{% extends "loggedin.html" %}
+{% extends "authorized.html" %}
 {% block content %}
 <form class="form-horizontal" method="post" action="/send">
     {% if form %}{{form.hidden_tag()}}{% endif %}
