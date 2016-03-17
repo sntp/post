@@ -1,0 +1,20 @@
+{% extends "authorized.html" %}
+{% block content %}
+{% if pagination %}
+<div class="text-right">
+    {{ pagination.info }}
+</div>
+{% endif %}
+
+{% if mails %}
+<div class="panel panel-default">
+  {% block mail_list %} {% endblock %}
+</div>
+{% endif %}
+
+{% if pagination %}
+<div class="text-center">
+    {{ pagination.links }}
+</div>
+{% endif %}
+{% endblock %}

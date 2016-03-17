@@ -1,0 +1,13 @@
+Flask==0.10.1
+Flask-Login==0.3.2
+Flask-RESTful==0.3.5
+Flask-SQLAlchemy==2.1
+Flask-Security==1.7.5
+Flask-User==0.6.8
+Flask-WTF==0.12
+WTForms==2.1
+Werkzeug==0.11.4
+flask-paginate==0.4.1
+psycopg2==2.6.1
+Flask-Migrate==1.8.0
+cffi==1.5.2

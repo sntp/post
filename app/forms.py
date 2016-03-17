@@ -1,5 +1,5 @@
 from flask_wtf import Form
-from wtforms import StringField, BooleanField, HiddenField
+from wtforms import StringField, BooleanField, HiddenField, TextAreaField
 from wtforms.validators import InputRequired, Regexp
 from model import User
 
@@ -31,7 +31,7 @@ class SignupForm(Form):
 class SendMailForm(Form):
     recipient = StringField('recipient', validators=[InputRequired(), Regexp(r'^\S+$')])
     title = StringField('title')
-    text = StringField('text')
+    text = TextAreaField('text')
     draft = BooleanField('draft', default=False)
     draft_id = HiddenField('draft_id', validators=[Regexp('^\d*$')])
 

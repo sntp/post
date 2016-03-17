@@ -1,6 +1,10 @@
-from app import app
+from app import api
+from flask_restful import Resource
 
 
-@app.route('/register')
-def register():
-    pass
+class Hello(Resource):
+    def get(self):
+        return {'hello': 'hello'}
+
+
+api.add_resource(Hello, '/api/hello')

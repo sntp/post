@@ -1,0 +1,18 @@
+{% extends "authorized.html" %}
+{% block content %}
+{% if mail %}
+<div>
+    <p>From: {{mail.sender.username}}</p>
+    <p>To: {{mail.recipient.username}}</p>
+    <p>Title: {{mail.title}}</p>
+    <p>At: {{mail.timestamp.strftime('%d. %b %y %I:%M %p')}}</p>
+</div>
+<blockquote>
+    {% for paragraph in mail.text.split('\r\n')%}
+    <p>
+        {{paragraph}}
+    </p>
+    {% endfor %}
+</blockquote>
+{% endif %}
+{% endblock %}

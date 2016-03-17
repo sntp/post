@@ -1,9 +1,11 @@
+import os
+
 class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
     SECRET_KEY = 'this-really-needs-to-be-changed'
-    SQLALCHEMY_DATABASE_URI = "postgresql://postgres:0000@localhost:5432/mails"
+    SQLALCHEMY_DATABASE_URI = os.getenv('POST_DATABASE', 'postgresql://postgres:0000@localhost:5432/mails2')
 
 
 class ProductionConfig(Config):

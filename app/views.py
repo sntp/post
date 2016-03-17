@@ -1,5 +1,6 @@
 from flask import flash, render_template, request, redirect, url_for
 from flask_login import login_user, logout_user, current_user, login_required
+from sqlalchemy.sql import or_
 from flask_paginate import Pagination
 from app import app, login_manager
 from model import *
@@ -27,8 +28,8 @@ def login_post():
     if not form.validate_on_submit():
         flash('Wrong username or password.', 'danger')
         return _render_login_template(form)
-    user = User.query\
-        .filter_by(username=form.username.data.lower())\
+    user = User.query \
+        .filter(User.username == form.username.data.lower()) \
         .first()
     login_user(user, remember=form.remember.data)
     return redirect(url_for('inbox'))
@@ -36,7 +37,7 @@ def login_post():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.filter_by(id=user_id).first()
+    return User.query.filter(User.id == user_id).first()
 
 
 @app.route("/logout")
@@ -66,7 +67,7 @@ def signup_post():
         db.session.commit()
         login_user(user)
         return redirect(url_for('inbox'))
-    elif User.query.filter_by(username=form.username.data.lower()).count():
+    elif User.query.filter(User.username == form.username.data.lower()).count():
         flash("This username is already taken.", 'danger')
     else:
         flash('Wrong username or password.', 'danger')
@@ -75,13 +76,16 @@ def signup_post():
 
 def _new_mails_count():
     return Mail.query\
-        .filter_by(recipient_id=current_user.get_id(), status='sent', viewed=False)\
+        .filter(Mail.recipient_id == current_user.get_id(),
+                Mail.status == MailStatus.SENT,
+                Mail.viewed == False) \
         .count()
 
 
 def _draft_count():
     return Mail.query\
-        .filter_by(sender_id=current_user.get_id(), status='draft')\
+        .filter(Mail.sender_id == current_user.get_id(),
+                Mail.status == MailStatus.DRAFT)\
         .count()
 
 
@@ -89,9 +93,13 @@ def _draft_count():
 @app.route('/inbox/<int:page>')
 @login_required
 def inbox(page=1):
-    total = Mail.query.filter_by(recipient_id=current_user.get_id(), status='sent').count()
+    total = Mail.query \
+        .filter(Mail.recipient_id == current_user.get_id(),
+                Mail.status == MailStatus.SENT) \
+        .count()
     mails = Mail.query \
-        .filter_by(recipient_id=current_user.get_id(), status='sent') \
+        .filter(Mail.recipient_id == current_user.get_id(),
+                Mail.status == MailStatus.SENT) \
         .order_by('timestamp DESC') \
         .paginate(page, config.MAIL_PER_PAGE) \
         .items
@@ -113,8 +121,9 @@ def send_get():
     draft_id = request.args.get('draft_id', None)
     form = SendMailForm()
     if helper.check_if_number(draft_id):
-        mail = Mail.query\
-            .filter_by(id=draft_id, sender_id=current_user.get_id(), status='draft')\
+        mail = Mail.query.filter(Mail.id == draft_id,
+                                 Mail.sender_id == current_user.get_id(),
+                                 Mail.status == MailStatus.DRAFT) \
             .first()
         if mail:
             form.recipient.data = mail.recipient.username
@@ -130,7 +139,7 @@ def send_get():
 
 
 def user_exists(username):
-    return User.query.filter_by(username=username).count() > 0
+    return User.query.filter(User.username == username).count() > 0
 
 
 @app.route('/send', methods=['POST'])
@@ -139,22 +148,24 @@ def send_post():
     form = SendMailForm()
     if form.validate_on_submit():
         sender_id = current_user.get_id()
-        recipient_id = User.query\
-            .filter_by(username=form.recipient.data.lower())\
-            .first()\
+        recipient_id = User.query \
+            .filter(User.username == form.recipient.data.lower()) \
+            .first() \
             .get_id()
         status = 'draft' if form.draft.data is True else 'sent'
         title = form.title.data or '...'
         text = form.text.data or '...'
         if form.draft_id.data:
             draft_id = form.draft_id.data
-            draft_mail = Mail\
-                .query\
-                .filter_by(id=draft_id, sender_id=current_user.get_id(), status='draft')\
+            draft_mail = Mail \
+                .query \
+                .filter(Mail.id == draft_id,
+                        Mail.sender_id == current_user.get_id(),
+                        Mail.status == MailStatus.DRAFT) \
                 .first()
             if draft_mail:
-                Mail.query\
-                    .filter_by(id=draft_id) \
+                Mail.query \
+                    .filter(Mail.id == draft_id) \
                     .update(dict(sender_id=sender_id,
                                  recipient_id=recipient_id,
                                  title=title,
@@ -170,10 +181,11 @@ def send_post():
             flash('Mail successfully sent.', 'success')
         else:
             flash('Mail saved to draft.', 'success')
-        form = None
+        return redirect(url_for('send_get'))
     else:
         if not user_exists(form.recipient.data):
-            flash('User with username \'%s\' doesn\'t exist.' % form.recipient.data, 'danger')
+            flash('User with username \'%s\' doesn\'t exist.'
+                  % form.recipient.data, 'danger')
         else:
             flash('Validation fail.', 'danger')
     return render_template('send-mail.html',
@@ -186,29 +198,17 @@ def send_post():
 @app.route('/mail/<int:id>')
 @login_required
 def mail(id):
-    mail = Mail.query.filter_by(id=id, recipient_id=current_user.get_id()).first()
+    user_id = current_user.get_id()
+    mail = Mail.query\
+        .filter(Mail.id == id,
+                or_(Mail.recipient_id == user_id, Mail.sender_id == user_id)) \
+        .first()
     if not mail:
         flash('Mail doesn\'t exist.', 'danger')
-    else:
-        Mail.query.filter_by(id=mail.id).update({'viewed': True})
+    elif mail.recipient_id == user_id:
+        Mail.query.filter(Mail.id == mail.id).update({'viewed': True})
         db.session.commit()
-    return render_template('incoming-mail.html',
-                           title='Mail',
-                           new_mails=_new_mails_count(),
-                           draft_mails=_draft_count(),
-                           mail=mail)
-
-
-@app.route('/mail/out/<int:id>')
-@login_required
-def mail_outbox(id):
-    mail = Mail.query.filter_by(id=id, sender_id=current_user.get_id()).first()
-    if not mail:
-        flash('Mail doesn\'t exist.', 'danger')
-    else:
-        Mail.query.filter_by(id=mail.id).update({'viewed': True})
-        db.session.commit()
-    return render_template('outcoming-mail.html',
+    return render_template('mail.html',
                            title='Mail',
                            new_mails=_new_mails_count(),
                            draft_mails=_draft_count(),
@@ -219,13 +219,20 @@ def mail_outbox(id):
 @app.route('/draft/<int:page>')
 @login_required
 def draft(page=1):
-    total = Mail.query.filter_by(sender_id=current_user.get_id(), status='draft').count()
+    total = Mail.query \
+        .filter(Mail.sender_id == current_user.get_id(),
+                Mail.status == MailStatus.DRAFT)\
+        .count()
     mails = Mail.query \
-        .filter_by(sender_id=current_user.get_id(), status='draft') \
+        .filter(Mail.sender_id == current_user.get_id(),
+                Mail.status == MailStatus.DRAFT) \
         .order_by('timestamp DESC') \
         .paginate(page, config.MAIL_PER_PAGE) \
         .items
-    pagination = Pagination(page=page, per_page=config.MAIL_PER_PAGE, total=total, bs_version=3)
+    pagination = Pagination(page=page,
+                            per_page=config.MAIL_PER_PAGE,
+                            total=total,
+                            bs_version=3)
     return render_template('draft.html',
                            title='Draft',
                            pagination=pagination,
@@ -238,13 +245,20 @@ def draft(page=1):
 @app.route('/outbox/<int:page>')
 @login_required
 def outbox(page=1):
-    total = Mail.query.filter_by(sender_id=current_user.get_id(), status='sent').count()
+    total = Mail.query \
+        .filter(Mail.sender_id == current_user.get_id(),
+                Mail.status == MailStatus.SENT) \
+        .count()
     mails = Mail.query \
-        .filter_by(sender_id=current_user.get_id(), status='sent') \
+        .filter(Mail.sender_id == current_user.get_id(),
+                Mail.status == MailStatus.SENT) \
         .order_by('timestamp DESC') \
         .paginate(page, config.MAIL_PER_PAGE) \
         .items
-    pagination = Pagination(page=page, per_page=config.MAIL_PER_PAGE, total=total, bs_version=3)
+    pagination = Pagination(page=page,
+                            per_page=config.MAIL_PER_PAGE,
+                            total=total,
+                            bs_version=3)
     return render_template('outbox.html',
                            title='Outbox',
                            pagination=pagination,

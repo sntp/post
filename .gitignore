@@ -45,3 +45,5 @@ fabric.properties
 
 .idea
 *.pyc
+mailsenv
+migrations
