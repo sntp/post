@@ -4,7 +4,7 @@ One more study project
 #### How to deploy
 Install dependencies:
 
-    pip install -r requarements.txt
+    pip install -r requirements.txt
 
 
 Set environment variables:
