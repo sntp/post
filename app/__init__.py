@@ -7,7 +7,7 @@ import config
 
 app = Flask(__name__)
 api = Api(app)
-app.config.from_object(config.DevelopmentConfig)
+app.config.from_object(config.ProductionConfig)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 from app import rest, views
